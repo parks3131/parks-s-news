@@ -1,4 +1,4 @@
-# Skibidi News
+# Parks News
 
 A personal AI-powered news aggregator. Pick your sources, hit a button — an agent fetches, scores, and surfaces your top 10 stories.
 
@@ -186,7 +186,7 @@ Run with `npm test`.
 
 ## Roadmap
 
-- **Skibidi Newsletter** — daily email digest of your top 10, sent every morning
+- **Parks Newsletter** — daily email digest of your top 10, sent every morning
 - Auth — protect the API endpoint
 - Persistent source preferences — remember your selections
 - More sources — add any RSS feed by URL

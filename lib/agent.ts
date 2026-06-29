@@ -44,7 +44,7 @@ const tools: OpenAI.Chat.ChatCompletionTool[] = [
   },
 ];
 
-const SYSTEM_PROMPT = `You are Skibidi News — a personal news curator agent.
+const SYSTEM_PROMPT = `You are Parks News — a personal news curator agent.
 
 Your job:
 1. Call search_source for EVERY source in the selected list. Do not skip any.
@@ -88,6 +88,46 @@ export async function* runAgent(
   const MAX_ITERATIONS = 30;
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
+    const toolResultCount = messages.filter((m) => m.role === 'tool').length;
+    const allFetched = toolResultCount > 0 && toolResultCount >= selectedSources.length;
+
+    if (allFetched) {
+      yield { type: 'ranking', message: 'Analyzing articles and finding top 10...' };
+
+      const stream = await client.chat.completions.create({
+        model: env.reasoningModel,
+        messages,
+        stream: true,
+      });
+
+      let content = '';
+      let rankFound = 0;
+
+      for await (const chunk of stream) {
+        const delta = chunk.choices[0]?.delta?.content ?? '';
+        content += delta;
+        const newCount = (content.match(/"rank"\s*:/g) ?? []).length;
+        if (newCount > rankFound) {
+          rankFound = newCount;
+          yield { type: 'ranking', message: `Finding top 10... (${rankFound}/10 ranked)` };
+        }
+      }
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]) as { top_stories: Story[] };
+          yield { type: 'done', message: 'Done', stories: parsed.top_stories };
+          return;
+        } catch {
+          yield { type: 'error', message: 'Could not parse agent JSON response' };
+          return;
+        }
+      }
+      yield { type: 'error', message: 'Agent returned no structured data' };
+      return;
+    }
+
     const response = await client.chat.completions.create({
       model: env.reasoningModel,
       messages,
@@ -100,7 +140,7 @@ export async function* runAgent(
 
     if (message.tool_calls?.length) {
       const calls = message.tool_calls.filter(
-        (c): c is OpenAI.Chat.ChatCompletionMessageToolCall =>
+        (c): c is Extract<OpenAI.Chat.ChatCompletionMessageToolCall, { type: 'function' }> =>
           c.type === 'function' && 'function' in c
       );
 
@@ -128,7 +168,7 @@ export async function* runAgent(
       messages.push(...toolResults);
       yield { type: 'fetched', message: `Fetched: ${sourceNames}` };
     } else {
-      yield { type: 'ranking', message: 'Agent ranking stories...' };
+      yield { type: 'ranking', message: 'Analyzing articles and finding top 10...' };
 
       const content = message.content ?? '';
       const match = content.match(/\{[\s\S]*\}/);

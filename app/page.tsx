@@ -70,7 +70,13 @@ export default function Home() {
             if (event.type === 'fetching' || event.type === 'fetched') {
               setStatusLog((prev) => [...prev, event.message]);
             } else if (event.type === 'ranking') {
-              setStatusLog((prev) => [...prev, 'Agent is ranking stories...']);
+              setStatusLog((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.startsWith('Analyzing') || last?.startsWith('Finding top 10')) {
+                  return [...prev.slice(0, -1), event.message];
+                }
+                return [...prev, event.message];
+              });
             } else if (event.type === 'done' && event.stories) {
               setStatusLog([]);
               const incoming = event.stories;
@@ -124,7 +130,7 @@ export default function Home() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="mb-10">
           <h1 className="text-4xl font-bold tracking-tight mb-1">
-            Skibidi <span className="text-violet-400">News</span>
+            Parks <span className="text-violet-400">News</span>
           </h1>
           <p className="text-slate-400 text-sm">
             Select your sources. Agent fetches, scores, and surfaces the top 10.

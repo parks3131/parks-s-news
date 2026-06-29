@@ -18,7 +18,7 @@ export interface FetchResult {
 
 const parser = new Parser({
   timeout: 10000,
-  headers: { 'User-Agent': 'Skibidi-News/1.0' },
+  headers: { 'User-Agent': 'Parks-News/1.0' },
 });
 
 const cache = new Map<string, { data: FetchResult; timestamp: number }>();
