@@ -1,4 +1,5 @@
 # Parks News
+Open [https://parks-s-news.vercel.app/], select sources, click **Get Top 10**.
 
 A personal AI-powered news aggregator. Pick your sources, hit a button — an agent fetches, scores, and surfaces your top 10 stories.
 
